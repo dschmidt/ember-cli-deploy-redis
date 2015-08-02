@@ -53,13 +53,44 @@ describe('redis plugin', function() {
         config: {
           redis: {
             host: 'somehost',
-            port: 1234
+            port: 1234,
+            database: 4
           }
         }
       };
       plugin.beforeHook(context);
       plugin.configure(context);
       assert.ok(true); // didn't throw an error
+    });
+
+    it('passes through config options', function () {
+      // TODO: test that config options are passed through to redisClient
+      // we can't currently test this as providing a redisDeployClient prevents the usage of the passed in options
+      // if we don't provide it directly, a real Redis client is instantiated which tries to instantiate a connection
+      // tl;dr: we need to add a possibility to mock the instantiated Redis client
+
+
+      // until then we just check all passed in options can be read without error
+      var plugin = subject.createDeployPlugin({
+        name: 'redis'
+      });
+
+      var context = {
+        ui: mockUi,
+        project: stubProject,
+        config: {
+          redis: {
+            host: 'somehost',
+            port: 1234,
+            database: 4
+          }
+        }
+      };
+      plugin.beforeHook(context);
+      plugin.configure(context);
+      assert.equal(plugin.readConfig('host'), 'somehost');
+      assert.equal(plugin.readConfig('port'), 1234);
+      assert.equal(plugin.readConfig('database'), 4);
     });
 
     describe('resolving revisionKey from the pipeline', function() {
