@@ -250,6 +250,29 @@ describe('redis plugin', function() {
         assert.isDefined(config.redis.didDeployMessage);
       });
     });
+
+    describe('with aliases', function () {
+      it('reads config from specified alias', function () {
+        var plugin = subject.createDeployPlugin({
+          name: 'foobar'
+        });
+
+        var config = {
+          redisDeployClient: 'configured-client'
+        };
+        var context = {
+          ui: mockUi,
+          project: stubProject,
+          config: {
+            foobar: config
+          }
+        };
+
+        plugin.beforeHook(context);
+        plugin.configure(context);
+        assert.equal(plugin.readConfig('redisDeployClient'), 'configured-client');
+      });
+    });
   });
 
   describe('upload hook', function() {
