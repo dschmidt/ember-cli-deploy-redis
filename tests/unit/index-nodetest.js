@@ -2,6 +2,7 @@
 
 var Promise = require('ember-cli/lib/ext/promise');
 var assert  = require('ember-cli/tests/helpers/assert');
+var CoreObject = require('core-object');
 
 var stubProject = {
   name: function(){
@@ -64,17 +65,11 @@ describe('redis plugin', function() {
     });
 
     it('passes through config options', function () {
-      // TODO: test that config options are passed through to redisClient
-      // we can't currently test this as providing a redisDeployClient prevents the usage of the passed in options
-      // if we don't provide it directly, a real Redis client is instantiated which tries to instantiate a connection
-      // tl;dr: we need to add a possibility to mock the instantiated Redis client
-
-
-      // until then we just check all passed in options can be read without error
       var plugin = subject.createDeployPlugin({
         name: 'redis'
       });
 
+      var redisDeployClientClassInitialised = false;
       var context = {
         ui: mockUi,
         project: stubProject,
@@ -84,13 +79,20 @@ describe('redis plugin', function() {
             port: 1234,
             database: 4
           }
-        }
+        },
+        redisDeployClientClass: CoreObject.extend({
+          init: function (options) {
+            assert.equal(options.host, 'somehost');
+            assert.equal(options.port, 1234);
+            assert.equal(options.database, 4);
+            redisDeployClientClassInitialised = true;
+          }
+        })
       };
       plugin.beforeHook(context);
       plugin.configure(context);
-      assert.equal(plugin.readConfig('host'), 'somehost');
-      assert.equal(plugin.readConfig('port'), 1234);
-      assert.equal(plugin.readConfig('database'), 4);
+      plugin.readConfig("redisDeployClient");
+      assert.ok(redisDeployClientClassInitialised);
     });
 
     describe('resolving revisionKey from the pipeline', function() {
